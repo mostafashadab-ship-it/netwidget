@@ -1,0 +1,66 @@
+name: Build APK
+
+on:
+  push:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Arrange project files
+        run: |
+          mkdir -p app/src/main/java/com/example/netwidget
+          mkdir -p app/src/main/res/layout app/src/main/res/drawable app/src/main/res/xml app/src/main/res/values
+          mv AndroidManifest.xml app/src/main/
+          mv NetWidgetProvider.java TapActivity.java app/src/main/java/com/example/netwidget/
+          mv widget.xml app/src/main/res/layout/
+          mv widget_bg.xml app/src/main/res/drawable/
+          mv widget_info.xml app/src/main/res/xml/
+          mv strings.xml app/src/main/res/values/
+          cat > build.gradle <<'EOF'
+          plugins {
+              id 'com.android.application' version '8.5.2' apply false
+          }
+          EOF
+          cat > app/build.gradle <<'EOF'
+          plugins {
+              id 'com.android.application'
+          }
+          android {
+              namespace 'com.example.netwidget'
+              compileSdk 34
+              defaultConfig {
+                  applicationId "com.example.netwidget"
+                  minSdk 30
+                  targetSdk 34
+                  versionCode 1
+                  versionName "1.0"
+              }
+              compileOptions {
+                  sourceCompatibility JavaVersion.VERSION_17
+                  targetCompatibility JavaVersion.VERSION_17
+              }
+          }
+          EOF
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - uses: android-actions/setup-android@v3
+
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.9'
+
+      - name: Build debug APK
+        run: gradle assembleDebug
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: NetWidget-apk
+          path: app/build/outputs/apk/debug/app-debug.apk
