@@ -10,21 +10,17 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Arrange project files
+      - name: Create project files
         run: |
           mkdir -p app/src/main/java/com/example/netwidget
-          mkdir -p app/src/main/res/layout app/src/main/res/drawable app/src/main/res/xml app/src/main/res/values
-          mv AndroidManifest.xml app/src/main/
-          mv NetWidgetProvider.java TapActivity.java app/src/main/java/com/example/netwidget/
-          mv widget.xml app/src/main/res/layout/
-          mv widget_bg.xml app/src/main/res/drawable/
-          mv widget_info.xml app/src/main/res/xml/
-          mv strings.xml app/src/main/res/values/
+          mkdir -p app/src/main/res/drawable app/src/main/res/values
+
           cat > build.gradle <<'EOF'
           plugins {
               id 'com.android.application' version '8.5.2' apply false
           }
           EOF
+
           cat > app/build.gradle <<'EOF'
           plugins {
               id 'com.android.application'
@@ -36,12 +32,140 @@ jobs:
                   applicationId "com.example.netwidget"
                   minSdk 30
                   targetSdk 34
-                  versionCode 1
-                  versionName "1.0"
+                  versionCode 2
+                  versionName "2.0"
               }
               compileOptions {
                   sourceCompatibility JavaVersion.VERSION_17
                   targetCompatibility JavaVersion.VERSION_17
+              }
+          }
+          EOF
+
+          cat > app/src/main/AndroidManifest.xml <<'EOF'
+          <?xml version="1.0" encoding="utf-8"?>
+          <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+              <queries>
+                  <package android:name="com.android.phone" />
+                  <package android:name="com.android.settings" />
+              </queries>
+              <application
+                  android:label="@string/app_name"
+                  android:allowBackup="false">
+                  <service
+                      android:name=".NetTileService"
+                      android:exported="true"
+                      android:label="@string/app_name"
+                      android:icon="@drawable/ic_net"
+                      android:permission="android.permission.BIND_QUICK_SETTINGS_TILE">
+                      <intent-filter>
+                          <action android:name="android.service.quicksettings.action.QS_TILE" />
+                      </intent-filter>
+                  </service>
+              </application>
+          </manifest>
+          EOF
+
+          cat > app/src/main/res/values/strings.xml <<'EOF'
+          <?xml version="1.0" encoding="utf-8"?>
+          <resources>
+              <string name="app_name">Network Mode</string>
+          </resources>
+          EOF
+
+          cat > app/src/main/res/drawable/ic_net.xml <<'EOF'
+          <?xml version="1.0" encoding="utf-8"?>
+          <vector xmlns:android="http://schemas.android.com/apk/res/android"
+              android:width="24dp"
+              android:height="24dp"
+              android:viewportWidth="24"
+              android:viewportHeight="24">
+              <path
+                  android:fillColor="#FFFFFF"
+                  android:pathData="M2,22h4v-6h-4z M8,22h4v-10h-4z M14,22h4v-14h-4z M20,22h2v-18h-2z" />
+          </vector>
+          EOF
+
+          cat > app/src/main/java/com/example/netwidget/NetTileService.java <<'EOF'
+          package com.example.netwidget;
+
+          import android.app.PendingIntent;
+          import android.content.ComponentName;
+          import android.content.Intent;
+          import android.content.SharedPreferences;
+          import android.graphics.drawable.Icon;
+          import android.os.Build;
+          import android.provider.Settings;
+          import android.service.quicksettings.Tile;
+          import android.service.quicksettings.TileService;
+          import android.widget.Toast;
+
+          public class NetTileService extends TileService {
+
+              private static final String PREFS = "netwidget";
+              private static final String KEY = "mode"; // 0 = 5G/4G, 1 = 5G/4G/2G
+
+              @Override
+              public void onStartListening() {
+                  update();
+              }
+
+              @Override
+              public void onClick() {
+                  SharedPreferences sp = getSharedPreferences(PREFS, MODE_PRIVATE);
+                  int mode = sp.getInt(KEY, 0);
+
+                  Toast.makeText(this,
+                          mode == 0 ? "Select: NR/LTE (5G/4G)"
+                                    : "Select: NR/LTE/GSM/WCDMA (5G/4G/3G/2G)",
+                          Toast.LENGTH_LONG).show();
+
+                  sp.edit().putInt(KEY, mode == 0 ? 1 : 0).apply();
+                  update();
+                  launch();
+              }
+
+              private void update() {
+                  Tile tile = getQsTile();
+                  if (tile == null) return;
+                  int mode = getSharedPreferences(PREFS, MODE_PRIVATE).getInt(KEY, 0);
+                  tile.setLabel(mode == 0 ? "5G / 4G" : "5G / 4G / 2G");
+                  tile.setSubtitle("Tap, then choose");
+                  tile.setIcon(Icon.createWithResource(this, R.drawable.ic_net));
+                  tile.setState(Tile.STATE_ACTIVE);
+                  tile.updateTile();
+              }
+
+              private Intent pickIntent() {
+                  String[][] candidates = {
+                          {"com.android.phone", "com.android.phone.settings.RadioInfo"},
+                          {"com.android.settings", "com.android.settings.RadioInfo"}
+                  };
+                  for (String[] c : candidates) {
+                      try {
+                          ComponentName cn = new ComponentName(c[0], c[1]);
+                          getPackageManager().getActivityInfo(cn, 0);
+                          Intent i = new Intent(Intent.ACTION_MAIN);
+                          i.setComponent(cn);
+                          i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                          return i;
+                      } catch (Exception ignored) {
+                      }
+                  }
+                  Intent i = new Intent(Settings.ACTION_DATA_ROAMING_SETTINGS);
+                  i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                  return i;
+              }
+
+              private void launch() {
+                  Intent i = pickIntent();
+                  if (Build.VERSION.SDK_INT >= 34) {
+                      PendingIntent pi = PendingIntent.getActivity(this, 0, i,
+                              PendingIntent.FLAG_IMMUTABLE | PendingIntent.FLAG_UPDATE_CURRENT);
+                      startActivityAndCollapse(pi);
+                  } else {
+                      startActivityAndCollapse(i);
+                  }
               }
           }
           EOF
