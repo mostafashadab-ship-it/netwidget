@@ -40,3 +40,274 @@ jobs:
               signingConfigs {
                   debug {
                       storeFile file('debug.keystore')
+                      storePassword 'android'
+                      keyAlias 'debugkey'
+                      keyPassword 'android'
+                  }
+              }
+              compileOptions {
+                  sourceCompatibility JavaVersion.VERSION_17
+                  targetCompatibility JavaVersion.VERSION_17
+              }
+          }
+          EOF
+
+          cat > app/src/main/AndroidManifest.xml <<'EOF'
+          <?xml version="1.0" encoding="utf-8"?>
+          <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+              <uses-permission android:name="android.permission.READ_PHONE_STATE" />
+              <queries>
+                  <package android:name="com.android.phone" />
+                  <package android:name="com.android.settings" />
+              </queries>
+              <application
+                  android:label="@string/app_name"
+                  android:icon="@drawable/ic_launcher"
+                  android:allowBackup="false">
+                  <activity
+                      android:name=".MainActivity"
+                      android:exported="true"
+                      android:excludeFromRecents="true"
+                      android:noHistory="true"
+                      android:theme="@android:style/Theme.Translucent.NoTitleBar">
+                      <intent-filter>
+                          <action android:name="android.intent.action.MAIN" />
+                          <category android:name="android.intent.category.LAUNCHER" />
+                      </intent-filter>
+                  </activity>
+                  <service
+                      android:name=".NetTileService"
+                      android:exported="true"
+                      android:label="@string/app_name"
+                      android:icon="@drawable/ic_5g"
+                      android:permission="android.permission.BIND_QUICK_SETTINGS_TILE">
+                      <intent-filter>
+                          <action android:name="android.service.quicksettings.action.QS_TILE" />
+                      </intent-filter>
+                  </service>
+                  <activity
+                      android:name=".PermActivity"
+                      android:exported="false"
+                      android:excludeFromRecents="true"
+                      android:noHistory="true"
+                      android:theme="@android:style/Theme.Translucent.NoTitleBar" />
+              </application>
+          </manifest>
+          EOF
+
+          cat > app/src/main/res/values/strings.xml <<'EOF'
+          <?xml version="1.0" encoding="utf-8"?>
+          <resources>
+              <string name="app_name">5G only</string>
+          </resources>
+          EOF
+
+          cat > app/src/main/res/drawable/ic_5g.xml <<'EOF'
+          <?xml version="1.0" encoding="utf-8"?>
+          <vector xmlns:android="http://schemas.android.com/apk/res/android"
+              android:width="24dp"
+              android:height="24dp"
+              android:viewportWidth="24"
+              android:viewportHeight="24">
+              <path
+                  android:strokeColor="#FFFFFF"
+                  android:strokeWidth="1.8"
+                  android:strokeLineCap="round"
+                  android:strokeLineJoin="round"
+                  android:pathData="M10,6 H5.5 L5,11.5 C6,10.8 7,10.6 8,10.8 C9.7,11.2 10.3,12.6 10.3,14.3 C10.3,16.4 9,18 7.5,18 C6.4,18 5.5,17.6 5,17" />
+              <path
+                  android:strokeColor="#FFFFFF"
+                  android:strokeWidth="1.8"
+                  android:strokeLineCap="round"
+                  android:strokeLineJoin="round"
+                  android:pathData="M19,8 C18,6.8 16.8,6.2 15.5,6.2 C13,6.2 11.8,8.4 11.8,12 C11.8,15.6 13,17.8 15.5,17.8 C17.5,17.8 19,16.5 19,13.5 H15.8" />
+          </vector>
+          EOF
+
+          cat > app/src/main/res/drawable/ic_launcher.xml <<'EOF'
+          <?xml version="1.0" encoding="utf-8"?>
+          <layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+              <item>
+                  <shape android:shape="oval">
+                      <solid android:color="#1565C0" />
+                  </shape>
+              </item>
+              <item>
+                  <inset
+                      android:drawable="@drawable/ic_5g"
+                      android:inset="12%" />
+              </item>
+          </layer-list>
+          EOF
+
+          cat > app/src/main/java/com/example/netwidget/Opener.java <<'EOF'
+          package com.example.netwidget;
+
+          import android.content.ComponentName;
+          import android.content.Context;
+          import android.content.Intent;
+          import android.provider.Settings;
+
+          final class Opener {
+              static final String HINT = "Select: NR only  (5G only)";
+
+              static Intent radioInfo(Context ctx) {
+                  String[][] candidates = {
+                          {"com.android.phone", "com.android.phone.settings.RadioInfo"},
+                          {"com.android.settings", "com.android.settings.RadioInfo"}
+                  };
+                  for (String[] c : candidates) {
+                      try {
+                          ComponentName cn = new ComponentName(c[0], c[1]);
+                          ctx.getPackageManager().getActivityInfo(cn, 0);
+                          Intent i = new Intent(Intent.ACTION_MAIN);
+                          i.setComponent(cn);
+                          i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                          return i;
+                      } catch (Exception ignored) {
+                      }
+                  }
+                  Intent i = new Intent(Settings.ACTION_DATA_ROAMING_SETTINGS);
+                  i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                  return i;
+              }
+          }
+          EOF
+
+          cat > app/src/main/java/com/example/netwidget/MainActivity.java <<'EOF'
+          package com.example.netwidget;
+
+          import android.app.Activity;
+          import android.os.Bundle;
+          import android.widget.Toast;
+
+          public class MainActivity extends Activity {
+              @Override
+              protected void onCreate(Bundle b) {
+                  super.onCreate(b);
+                  Toast.makeText(this, Opener.HINT, Toast.LENGTH_LONG).show();
+                  startActivity(Opener.radioInfo(this));
+                  finish();
+              }
+          }
+          EOF
+
+          cat > app/src/main/java/com/example/netwidget/PermActivity.java <<'EOF'
+          package com.example.netwidget;
+
+          import android.Manifest;
+          import android.app.Activity;
+          import android.os.Bundle;
+
+          public class PermActivity extends Activity {
+              @Override
+              protected void onCreate(Bundle b) {
+                  super.onCreate(b);
+                  requestPermissions(new String[]{Manifest.permission.READ_PHONE_STATE}, 1);
+              }
+
+              @Override
+              public void onRequestPermissionsResult(int code, String[] perms, int[] results) {
+                  finish();
+              }
+          }
+          EOF
+
+          cat > app/src/main/java/com/example/netwidget/NetTileService.java <<'EOF'
+          package com.example.netwidget;
+
+          import android.Manifest;
+          import android.app.PendingIntent;
+          import android.content.Intent;
+          import android.content.pm.PackageManager;
+          import android.graphics.drawable.Icon;
+          import android.os.Build;
+          import android.service.quicksettings.Tile;
+          import android.service.quicksettings.TileService;
+          import android.telephony.TelephonyManager;
+          import android.widget.Toast;
+
+          public class NetTileService extends TileService {
+
+              @Override
+              public void onStartListening() {
+                  update();
+              }
+
+              @Override
+              public void onClick() {
+                  if (!hasPermission()) {
+                      Intent p = new Intent(this, PermActivity.class);
+                      p.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                      launch(p);
+                      return;
+                  }
+                  Toast.makeText(this, Opener.HINT, Toast.LENGTH_LONG).show();
+                  launch(Opener.radioInfo(this));
+              }
+
+              private boolean hasPermission() {
+                  return checkSelfPermission(Manifest.permission.READ_PHONE_STATE)
+                          == PackageManager.PERMISSION_GRANTED;
+              }
+
+              private String currentNet() {
+                  try {
+                      TelephonyManager tm = (TelephonyManager) getSystemService(TELEPHONY_SERVICE);
+                      switch (tm.getDataNetworkType()) {
+                          case 20:
+                              return "5G";
+                          case 13:
+                          case 19:
+                              return "4G";
+                          case 3: case 5: case 6: case 8: case 9:
+                          case 10: case 12: case 14: case 15: case 17:
+                              return "3G";
+                          case 1: case 2: case 4: case 7: case 11: case 16:
+                              return "2G";
+                          default:
+                              return "none";
+                      }
+                  } catch (Exception e) {
+                      return "?";
+                  }
+              }
+
+              private void update() {
+                  Tile tile = getQsTile();
+                  if (tile == null) return;
+                  tile.setLabel("5G only");
+                  tile.setSubtitle(hasPermission() ? "Now: " + currentNet() : "Tap to allow");
+                  tile.setIcon(Icon.createWithResource(this, R.drawable.ic_5g));
+                  tile.setState(Tile.STATE_ACTIVE);
+                  tile.updateTile();
+              }
+
+              private void launch(Intent i) {
+                  if (Build.VERSION.SDK_INT >= 34) {
+                      PendingIntent pi = PendingIntent.getActivity(this, 0, i,
+                              PendingIntent.FLAG_IMMUTABLE | PendingIntent.FLAG_UPDATE_CURRENT);
+                      startActivityAndCollapse(pi);
+                  } else {
+                      startActivityAndCollapse(i);
+                  }
+              }
+          }
+          EOF
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.9'
+
+      - name: Build debug APK
+        run: gradle assembleDebug
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: NetWidget-apk
+          path: app/build/outputs/apk/debug/app-debug.apk
