@@ -15,6 +15,8 @@ jobs:
           mkdir -p app/src/main/java/com/example/netwidget
           mkdir -p app/src/main/res/drawable app/src/main/res/values
 
+          echo "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" | base64 -d > app/debug.keystore
+
           cat > build.gradle <<'EOF'
           plugins {
               id 'com.android.application' version '8.5.2' apply false
@@ -32,157 +34,9 @@ jobs:
                   applicationId "com.example.netwidget"
                   minSdk 30
                   targetSdk 34
-                  versionCode 2
-                  versionName "2.0"
+                  versionCode 100 + Integer.parseInt(System.getenv('GITHUB_RUN_NUMBER') ?: '1')
+                  versionName "4.0"
               }
-              compileOptions {
-                  sourceCompatibility JavaVersion.VERSION_17
-                  targetCompatibility JavaVersion.VERSION_17
-              }
-          }
-          EOF
-
-          cat > app/src/main/AndroidManifest.xml <<'EOF'
-          <?xml version="1.0" encoding="utf-8"?>
-          <manifest xmlns:android="http://schemas.android.com/apk/res/android">
-              <queries>
-                  <package android:name="com.android.phone" />
-                  <package android:name="com.android.settings" />
-              </queries>
-              <application
-                  android:label="@string/app_name"
-                  android:allowBackup="false">
-                  <service
-                      android:name=".NetTileService"
-                      android:exported="true"
-                      android:label="@string/app_name"
-                      android:icon="@drawable/ic_net"
-                      android:permission="android.permission.BIND_QUICK_SETTINGS_TILE">
-                      <intent-filter>
-                          <action android:name="android.service.quicksettings.action.QS_TILE" />
-                      </intent-filter>
-                  </service>
-              </application>
-          </manifest>
-          EOF
-
-          cat > app/src/main/res/values/strings.xml <<'EOF'
-          <?xml version="1.0" encoding="utf-8"?>
-          <resources>
-              <string name="app_name">Network Mode</string>
-          </resources>
-          EOF
-
-          cat > app/src/main/res/drawable/ic_net.xml <<'EOF'
-          <?xml version="1.0" encoding="utf-8"?>
-          <vector xmlns:android="http://schemas.android.com/apk/res/android"
-              android:width="24dp"
-              android:height="24dp"
-              android:viewportWidth="24"
-              android:viewportHeight="24">
-              <path
-                  android:fillColor="#FFFFFF"
-                  android:pathData="M2,22h4v-6h-4z M8,22h4v-10h-4z M14,22h4v-14h-4z M20,22h2v-18h-2z" />
-          </vector>
-          EOF
-
-          cat > app/src/main/java/com/example/netwidget/NetTileService.java <<'EOF'
-          package com.example.netwidget;
-
-          import android.app.PendingIntent;
-          import android.content.ComponentName;
-          import android.content.Intent;
-          import android.content.SharedPreferences;
-          import android.graphics.drawable.Icon;
-          import android.os.Build;
-          import android.provider.Settings;
-          import android.service.quicksettings.Tile;
-          import android.service.quicksettings.TileService;
-          import android.widget.Toast;
-
-          public class NetTileService extends TileService {
-
-              private static final String PREFS = "netwidget";
-              private static final String KEY = "mode"; // 0 = 5G/4G, 1 = 5G/4G/2G
-
-              @Override
-              public void onStartListening() {
-                  update();
-              }
-
-              @Override
-              public void onClick() {
-                  SharedPreferences sp = getSharedPreferences(PREFS, MODE_PRIVATE);
-                  int mode = sp.getInt(KEY, 0);
-
-                  Toast.makeText(this,
-                          mode == 0 ? "Select: NR/LTE (5G/4G)"
-                                    : "Select: NR/LTE/GSM/WCDMA (5G/4G/3G/2G)",
-                          Toast.LENGTH_LONG).show();
-
-                  sp.edit().putInt(KEY, mode == 0 ? 1 : 0).apply();
-                  update();
-                  launch();
-              }
-
-              private void update() {
-                  Tile tile = getQsTile();
-                  if (tile == null) return;
-                  int mode = getSharedPreferences(PREFS, MODE_PRIVATE).getInt(KEY, 0);
-                  tile.setLabel(mode == 0 ? "5G / 4G" : "5G / 4G / 2G");
-                  tile.setSubtitle("Tap, then choose");
-                  tile.setIcon(Icon.createWithResource(this, R.drawable.ic_net));
-                  tile.setState(Tile.STATE_ACTIVE);
-                  tile.updateTile();
-              }
-
-              private Intent pickIntent() {
-                  String[][] candidates = {
-                          {"com.android.phone", "com.android.phone.settings.RadioInfo"},
-                          {"com.android.settings", "com.android.settings.RadioInfo"}
-                  };
-                  for (String[] c : candidates) {
-                      try {
-                          ComponentName cn = new ComponentName(c[0], c[1]);
-                          getPackageManager().getActivityInfo(cn, 0);
-                          Intent i = new Intent(Intent.ACTION_MAIN);
-                          i.setComponent(cn);
-                          i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                          return i;
-                      } catch (Exception ignored) {
-                      }
-                  }
-                  Intent i = new Intent(Settings.ACTION_DATA_ROAMING_SETTINGS);
-                  i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                  return i;
-              }
-
-              private void launch() {
-                  Intent i = pickIntent();
-                  if (Build.VERSION.SDK_INT >= 34) {
-                      PendingIntent pi = PendingIntent.getActivity(this, 0, i,
-                              PendingIntent.FLAG_IMMUTABLE | PendingIntent.FLAG_UPDATE_CURRENT);
-                      startActivityAndCollapse(pi);
-                  } else {
-                      startActivityAndCollapse(i);
-                  }
-              }
-          }
-          EOF
-
-      - uses: actions/setup-java@v4
-        with:
-          distribution: temurin
-          java-version: '17'
-
-      - uses: gradle/actions/setup-gradle@v4
-        with:
-          gradle-version: '8.9'
-
-      - name: Build debug APK
-        run: gradle assembleDebug
-
-      - uses: actions/upload-artifact@v4
-        with:
-          name: NetWidget-apk
-          path: app/build/outputs/apk/debug/app-debug.apk
+              signingConfigs {
+                  debug {
+                      storeFile file('debug.keystore')
